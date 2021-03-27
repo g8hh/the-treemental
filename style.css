@@ -1,0 +1,47 @@
+* {
+    font-family: 'Courier New', Courier, monospace;
+    table-align: center;
+	text-align: center;
+}
+
+body {
+    color: white;
+    background-color: #333;
+	overflow-x: hidden;
+	font-size: 16px;
+}
+
+table, tr {
+    display: flex;
+    justify-content: center;
+}
+
+button {
+    border: solid 3px black;
+    background-color: white;
+    font-size: 16px;
+	cursor: pointer;
+}
+
+h1 {
+    display: inline;
+	font-weight: normal;
+    font-size: 35px;
+}
+
+h2 {
+	display: inline;
+	font-weight: normal;
+    font-size: 25px;
+}
+
+.table_center {
+    display: flex;
+    justify-content: center;
+    flex-flow: row wrap;
+}
+
+.closed {
+    background-color: #666;
+    cursor: default;
+}

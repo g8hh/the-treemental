@@ -24,6 +24,7 @@
             <div style="height: 90%; display: flex;">
                 <canvas id='tree' style="width: 80%; height: 100%; border: solid 3px white; background-color: #222;"></canvas>
                 <div style="width: 20%; height: 100%; border: solid 3px white;"><br>
+                    Tree Upgrades: {{ player.canvas.upgArray.length }}/100<br>
                     <button style="width: 90%; height: 30px; font-size: 22px; font-weight: bold;" onclick="buyAllTree()">Buy All Upgrades</button>
                     <div style="height: 90px;"><br>
                         You have <h2>{{ format(player.points,0) }}</h2> Points.<br>
@@ -48,8 +49,24 @@
             <button onclick="if (confirm('You wanted to RESET your progress to new game?')) {wipe(true); location.reload()}">WIPE</button>
             <button onclick="exporty()">Export</button>
             <button onclick="importy()">Import</button><br><br>
-            The Treemental - v0.1<br>
+            The Treemental - v0.1.1<br>
             Made by MrRedShark77
+        </div><div v-if='player.tabs[0] == 2'>
+            You have <h2>{{ format(player.prestige.points, 0) }}</h2> Prestige points.<br><br>
+            <button class="prestige_button" v-bind:class="{closed: !FUNCTIONS.prestige.can()}" onclick="FUNCTIONS.prestige.reset()"><span v-if="FUNCTIONS.prestige.can()">Gain <b>{{ format(FUNCTIONS.prestige.points(),0) }}</b> Prestige points.</span><span v-if="!FUNCTIONS.prestige.can()">Reach <b>1e10</b> points to prestige.</span></button><br>
+            <button onclick="player.prestige.respec = !player.prestige.respec">Respec Tree Upgrades data: {{ player.prestige.respec?'ON':'OFF' }}</button><br><br>
+            <div class="table_center">
+                <div class="table_center" style="width: 75%;">
+                    <div v-for='x in UPGRADES.prestige.cols'>
+                        <button class="upgrade_button" v-on:click="UPGRADES.prestige.buy(x)"
+                        v-bind:class="{closed: !UPGRADES.prestige.can(x) && !player.prestige.upgrades.includes(x), bought: player.prestige.upgrades.includes(x)}">
+                            {{ UPGRADES.prestige[x].desc }}<br>
+                            Cost: {{ format(UPGRADES.prestige[x].cost, 0) }} PP
+                            <span v-if="UPGRADES.prestige[x].effDesc"><br>Currently: {{ UPGRADES.prestige[x].effDesc() }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </body>

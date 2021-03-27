@@ -18,6 +18,7 @@ function calc(dt) {
         player.canvasReady = true
     }
     player.points = player.points.add(FUNCTIONS.getPointsGain().mul(dt))
+    if (player.points.gte(1e10)) player.prestige.unl = true
     updateTree()
 }
 
@@ -35,6 +36,12 @@ function getNewPlayer() {
                 'm13': new treeUpg2('start', 'Start to generate Points.', E(0), 'start', {}),
             },
             upgArray: [],
+        },
+        prestige: {
+            unl: false,
+            points: E(0),
+            upgrades: [],
+            respec: false,
         },
     }
 }
@@ -61,17 +68,28 @@ function checkIfUndefined() {
     if (player.points === undefined) player.points = data.points
     if (player.treeUpgs === undefined) player.treeUpgs = data.treeUpgs
 
-    var c = player.canvas
+    let c = player.canvas
     if (c === undefined) c = data.canvas
 
-    if (c.lines === undefined) c = data.canvas.lines
-    if (c.treeGenerated === undefined) c = data.canvas.treeGenerated
-    if (c.TreeUpgs === undefined) c = data.canvas.TreeUpgs
-    if (c.upgArray === undefined) c = data.canvas.upgArray
+    if (c.lines === undefined) c.lines = data.canvas.lines
+    if (c.treeGenerated === undefined) c.treeGenerated = data.canvas.treeGenerated
+    if (c.TreeUpgs === undefined) c.TreeUpgs = data.canvas.TreeUpgs
+    if (c.upgArray === undefined) c.upgArray = data.canvas.upgArray
+
+    let p = player.prestige
+    if (p === undefined) p = data.prestige
+
+    if (p.unl === undefined) p.unl = data.prestige.unl
+    if (p.points === undefined) p.points = data.prestige.points
+    if (p.upgrades === undefined) p.points = data.prestige.upgrades
+    if (p.respec === undefined) p.points = data.prestige.respec
+
+    player.prestige = p
 }
 
 function convertToExpNum() {
     player.points = E(player.points)
+    player.prestige.points = E(player.prestige.points)
 }
 
 function save(){

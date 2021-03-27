@@ -8,20 +8,31 @@ const MOVETOUPG = {
 const UPGCHANCES = {
     points: {
         ratio: {
-            1: 10,
-            2: 3,
-            3: 1,
+            1: {
+                1: [20, 1],
+                2: [6, 2],
+                3: [2, 3],
+            },
+            2: {
+                1: [25, 1],
+                2: [12, 2],
+                3: [5, 4],
+                4: [2, 3],
+            },
         },
         upgs: {
             1(cost) {
                 let mult = randomInt(3,7)
-                return new treeUpg2('points', `Gain ${mult}x more points.`, cost, 'chance1', {mult: mult})
+                return new treeUpg2('points', `Gain ${format(mult**(player.prestige.upgrades.includes(1)?1.125:1), 1)}x more points.`, cost, 'chance1', {mult: mult})
             },
             2(cost) {
                 return new treeUpg2('points', 'Unspent points boost points gain at reduced rate.', cost, 'chance2', {})
             },
             3(cost) {
                 return new treeUpg2('points', 'Gain more points based on tree upgrades bought.', cost, 'chance3', {})
+            },
+            4(cost) {
+                return new treeUpg2('points', 'Unspent prestige points boost points at reduced rate.', cost, 'chance4', {})
             },
         },
     },
@@ -39,19 +50,30 @@ var TreeUpgs = {
     effs: {
         chance1: {
             eff(config) {
-                return E(config.mult)
+                let eff = E(config.mult)
+                if (player.prestige.upgrades.includes(1)) eff = eff.pow(1.125)
+                return eff
             },
         },
         chance2: {
             eff(config) {
                 let eff = player.points.max(1).log10().add(1)
+                if (player.prestige.upgrades.includes(1)) eff = eff.pow(1.125)
                 return eff
             },
             effDesc(x=this.eff()) { return format(x,2)+'x' },
         },
         chance3: {
             eff(config) {
-                return E(2).pow(player.treeUpgs.length**(0.6))
+                let base = 2
+                if (player.prestige.upgrades.includes(1)) base = base * 1.125
+                return E(base).pow(player.treeUpgs.length**(0.6))
+            },
+            effDesc(x=this.eff()) { return format(x,1)+'x' },
+        },
+        chance4: {
+            eff(config) {
+                return E(6).pow(player.prestige.points.max(1).log10().pow(0.8))
             },
             effDesc(x=this.eff()) { return format(x,1)+'x' },
         },
@@ -81,7 +103,7 @@ var TreeUpgs = {
         }
     },
     onBuy(id) {
-        if (!player.canvas.treeGenerated[id]) {
+        if (!player.canvas.treeGenerated[id] && player.canvas.upgArray.length < 100) {
             let tree = getTreeFromId(id)
             if (id == 'm13') {
                 let rand = Math.floor(Math.random()*4)+1
@@ -95,7 +117,7 @@ var TreeUpgs = {
                 let x = ALPS.indexOf(id[0]), y = parseInt(id.split(id[0])[1]);
                 for (let n = 1; n <= 4; n++) {
                     let X = x+MOVETOUPG[n][0], Y = y+MOVETOUPG[n][1];
-                    if (X > 0 && X < 26 && Y > 0 && Y < 26 && getTreeFromId(ALPS[X]+Y) === undefined ) free.push(n)
+                    if (X > 0 && X < 25 && Y > 0 && Y < 25 && getTreeFromId(ALPS[X]+Y) === undefined ) free.push(n)
                 }
                 if (free.length > 0) {
                     let count = Math.min(randomInt(1,2), Math.min(free.length, 2))
@@ -105,20 +127,22 @@ var TreeUpgs = {
                         get.push(free[r])
                         free.splice(r, 1);
                     }
-                    for (let x = 0; x < get.length; x++) {
+                    for (let x = 0; x < get.length; x++) if (player.canvas.upgArray.length < 100) {
                         let newID = ALPS[ALPS.indexOf(id[0])+MOVETOUPG[get[x]][0]]+(parseInt(id.split(id[0])[1])+MOVETOUPG[get[x]][1])
-                        let chance = randomInt(1,UPGCHANCES.points.ratio[1])
+                        let ratioId = 1
+                        if (player.canvas.upgArray.length > 50 && player.prestige.upgrades.includes(4)) ratioId = 2
+                        let chance = randomInt(1,UPGCHANCES.points.ratio[ratioId][1][0])
 
                         var length = player.canvas.upgArray.length
-                        if (length >= 100) length = length**1.125
+                        if (length >= 75) length = length**1.125
                         else if (length >= 50) length = length**1.1
                         else if (length >= 25) length = length**1.075
 
                         let cost = E(200).mul(E(5+length/5).pow(length-2)).floor()
 
-                        for (let i = 1; i <= Object.keys(UPGCHANCES.points.ratio).length; i++) {
-                            if (UPGCHANCES.points.ratio[i] >= chance && chance > (UPGCHANCES.points.ratio[i+1]?UPGCHANCES.points.ratio[i+1]:0)) {
-                                player.canvas.TreeUpgs[newID] = UPGCHANCES.points.upgs[i](cost)
+                        for (let i = 1; i <= Object.keys(UPGCHANCES.points.ratio[ratioId]).length; i++) {
+                            if (UPGCHANCES.points.ratio[ratioId][i][0] >= chance && chance > (UPGCHANCES.points.ratio[ratioId][i+1]?UPGCHANCES.points.ratio[ratioId][i+1][0]:0)) {
+                                player.canvas.TreeUpgs[newID] = UPGCHANCES.points.upgs[UPGCHANCES.points.ratio[ratioId][i][1]](cost)
                                 break
                             }
                         }

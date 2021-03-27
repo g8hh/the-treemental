@@ -45,3 +45,19 @@ h2 {
     background-color: #666;
     cursor: default;
 }
+
+.prestige_button {
+    width: 200px;
+    height: 80px;
+}
+
+.upgrade_button {
+    font-size: 12px;
+    width: 200px;
+    height: 100px;
+}
+
+.bought {
+    background-color: #080;
+    cursor: default;
+}

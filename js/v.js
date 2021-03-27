@@ -9,6 +9,7 @@ function loadVue() {
 			FUNCTIONS,
 			TABS,
 			TreeUpgs,
+			UPGRADES,
         }
 	})
 }

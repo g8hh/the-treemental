@@ -117,7 +117,7 @@ var TreeUpgs = {
                 let x = ALPS.indexOf(id[0]), y = parseInt(id.split(id[0])[1]);
                 for (let n = 1; n <= 4; n++) {
                     let X = x+MOVETOUPG[n][0], Y = y+MOVETOUPG[n][1];
-                    if (X > 0 && X < 25 && Y > 0 && Y < 25 && getTreeFromId(ALPS[X]+Y) === undefined ) free.push(n)
+                    if (X > 0 && X < 26 && Y > 0 && Y < 26 && getTreeFromId(ALPS[X]+Y) === undefined ) free.push(n)
                 }
                 if (free.length > 0) {
                     let count = Math.min(randomInt(1,2), Math.min(free.length, 2))

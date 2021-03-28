@@ -56,6 +56,7 @@
         </div><div v-if='player.tabs[0] == 2'>
             You have <h2>{{ format(player.prestige.points, 0) }}</h2> Prestige points.<br><br>
             <button class="prestige_button" v-bind:class="{closed: !FUNCTIONS.prestige.can()}" onclick="FUNCTIONS.prestige.reset()"><span v-if="FUNCTIONS.prestige.can()">Gain <b>{{ format(FUNCTIONS.prestige.points(),0) }}</b> Prestige points.</span><span v-if="!FUNCTIONS.prestige.can()">Reach <b>1e10</b> points to prestige.</span></button><br>
+            <button onclick="FUNCTIONS.prestige.doReset()">Reset without gaining prestige points.</button><br>
             <button onclick="player.prestige.respec = !player.prestige.respec">Respec Tree Upgrades data: {{ player.prestige.respec?'ON':'OFF' }}</button><br>
             When respec that, will back to previous floor.<br><br>
             <div class="table_center">

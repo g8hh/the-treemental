@@ -19,6 +19,13 @@ const UPGCHANCES = {
                 3: [5, 4],
                 4: [2, 3],
             },
+            3: {
+                1: [75, 1],
+                2: [35, 2],
+                3: [15, 4],
+                4: [5, 3],
+                5: [2, 5],
+            },
         },
         upgs: {
             1(cost) {
@@ -33,6 +40,9 @@ const UPGCHANCES = {
             },
             4(cost) {
                 return new treeUpg2('points', 'Unspent prestige points boost points at reduced rate.', cost, 'chance4', {})
+            },
+            5(cost) {
+                return new treeUpg2('points', 'Unspent research points boost points at reduced rate.', cost, 'chance5', {})
             },
         },
     },
@@ -83,6 +93,19 @@ var TreeUpgs = {
             },
             effDesc(x=this.eff()) { return format(x,1)+'x' },
         },
+        chance5: {
+            eff(config) {
+                let eff = player.research.points.pow(player.research.points.max(1).log10().pow(2))
+                return eff
+            },
+            effDesc(x=this.eff()) { return format(x,1)+'x' },
+        },
+
+        research: {
+            eff(config) {
+                return config.research.floor()
+            },
+        },
     },
     upgs: {
         /*
@@ -109,6 +132,9 @@ var TreeUpgs = {
         }
     },
     onBuy(id) {
+        if (player.canvas.TreeUpgs[id].type == 'research') {
+            player.research.points = player.research.points.add(player.canvas.TreeUpgs[id].config.research)
+        }
         if (!player.canvas.treeGenerated[id] && player.canvas.upgArray.length < 100) {
             let tree = getTreeFromId(id)
             if (id == 'm13') {
@@ -135,38 +161,56 @@ var TreeUpgs = {
                     }
                     for (let x = 0; x < get.length; x++) if (player.canvas.upgArray.length < 100) {
                         let newID = ALPS[ALPS.indexOf(id[0])+MOVETOUPG[get[x]][0]]+(parseInt(id.split(id[0])[1])+MOVETOUPG[get[x]][1])
-                        let ratioId = 1
-                        if (player.canvas.upgArray.length > 50 && player.prestige.upgrades.includes(4)) ratioId = 2
-                        let chance = randomInt(1,UPGCHANCES.points.ratio[ratioId][1][0])
-
-                        var length = player.canvas.upgArray.length
-                        if (length >= 75) length = length**1.125
-                        else if (length >= 50) length = length**1.1
-                        else if (length >= 25) length = length**1.075
-                        var f = E(2+(Math.max(player.floor-1,1)-1)/5).pow(player.floor-1)
-
-                        let cost = E(200).mul(E(5+length/5).mul(f).pow(length-2).pow(f)).floor()
-
-                        for (let i = 1; i <= Object.keys(UPGCHANCES.points.ratio[ratioId]).length; i++) {
-                            if (UPGCHANCES.points.ratio[ratioId][i][0] >= chance && chance > (UPGCHANCES.points.ratio[ratioId][i+1]?UPGCHANCES.points.ratio[ratioId][i+1][0]:0)) {
-                                var set = i
-                                if (player.prestige.upgrades.includes(6)) set = Math.max(set, 2)
-                                player.canvas.TreeUpgs[newID] = UPGCHANCES.points.upgs[UPGCHANCES.points.ratio[ratioId][set][1]](cost)
-                                break
-                            }
-                        }
+                        let chance = 100*Math.random()
+                        if (player.research.unl?(chance<5):false) {
+                            createResearchTree(newID)
+                        } else createTreeUpg(newID)
                         player.canvas.lines[newID] = id
                         addTreeUpg(tree.x+80*MOVETOUPG[get[x]][0],tree.y+80*MOVETOUPG[get[x]][1],newID)
                     }
-                    player.canvas.treeGenerated[id] = true
                 }
+                player.canvas.treeGenerated[id] = true
             }
         }
     },
 }
 
+function getTreeCost() {
+    var length = player.canvas.upgArray.length
+    if (length >= 75) length = length**1.125
+    else if (length >= 50) length = length**1.1
+    else if (length >= 25) length = length**1.075
+    var f = E(2+(Math.max(player.floor-1,1)-1)/5).pow(player.floor-1)
+
+    return E(200).mul(E(5+length/5).mul(f).pow(length-2).pow(f)).floor()
+}
+
+function createResearchTree(newID) {
+    let cost = getTreeCost()
+    let r = E(1)
+    if (FUNCTIONS.buyables.research.have(3)>0) r = r.mul(FUNCTIONS.buyables.research[3].eff())
+    player.canvas.TreeUpgs[newID] = new treeUpg2('research', 'Get '+format(r,0)+' research points.', cost, 'research', {research: r})
+}
+
+function createTreeUpg(newID) {
+    let ratioId = 1
+    if ((player.canvas.upgArray.length > 50 && player.prestige.upgrades.includes(4)) || player.research.upgrades.includes(2)) ratioId = 2
+    if (player.canvas.upgArray.length > 50 && player.research.upgrades.includes(3)) ratioId = 3
+    let chance = randomInt(1,UPGCHANCES.points.ratio[ratioId][1][0])
+    let cost = getTreeCost()
+
+    for (let i = 1; i <= Object.keys(UPGCHANCES.points.ratio[ratioId]).length; i++) {
+        if (UPGCHANCES.points.ratio[ratioId][i][0] >= chance && chance > (UPGCHANCES.points.ratio[ratioId][i+1]?UPGCHANCES.points.ratio[ratioId][i+1][0]:0)) {
+            var set = i
+            if (player.prestige.upgrades.includes(6)) set = Math.max(set, 2)
+            player.canvas.TreeUpgs[newID] = UPGCHANCES.points.upgs[UPGCHANCES.points.ratio[ratioId][set][1]](cost)
+            break
+        }
+    }
+}
+
 window.addEventListener('keydown', event=>{
-    if (event.keyCode == 77 && player.tabs[0] == 0) buyAllTree()
+    if (event.keyCode == 77) buyAllTree()
 })
 
 function buyAllTree() {

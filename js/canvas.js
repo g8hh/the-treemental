@@ -14,10 +14,12 @@ function treeUpg(x, y, id) {
 function updatePosition(tu) {
     let x = tu.x, y = tu.y, id = tu.id;
     ctx.beginPath()
-    ctx.rect(x+camera_pos.x,y+camera_pos.y,50,50)
-    ctx.fillStyle = player.treeUpgs.includes(id)?((id == 'm13')?'#ff0':'#0f0'):TreeUpgs.can(id)?'#999':'#555'
+    ctx.rect(x*player.zoom+camera_pos.x,y*player.zoom+camera_pos.y,50*player.zoom,50*player.zoom)
+    if (player.canvas.TreeUpgs[id].type == 'research') {
+        ctx.fillStyle = player.treeUpgs.includes(id)?'#00f':TreeUpgs.can(id)?'#009':'#005'
+    } else ctx.fillStyle = player.treeUpgs.includes(id)?((id == 'm13')?'#ff0':'#0f0'):TreeUpgs.can(id)?'#999':'#555'
     ctx.fill()
-    drawStroked(tu.id, x+camera_pos.x+5,y+camera_pos.y+14)
+    drawStroked(tu.id, x*player.zoom+camera_pos.x+5*player.zoom,y*player.zoom+camera_pos.y+14*player.zoom)
     if (tu.id == player.showUpg) {
         ctx.lineWidth = 5;
         ctx.strokeStyle = "#fff";
@@ -26,9 +28,10 @@ function updatePosition(tu) {
 }
 
 function drawStroked(text, x, y) {
-    ctx.font = '14px consolas';
+    let size = 14*player.zoom
+    ctx.font = size+'px consolas';
     ctx.strokeStyle = 'black';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 3*player.zoom;
     ctx.strokeText(text, x, y);
     ctx.fillStyle = 'white';
     ctx.fillText(text, x, y);
@@ -74,7 +77,7 @@ function canvas() {
             y = event.pageY - cv.offsetTop - cv.clientTop;
             player.showUpg = ''
             player.canvas.upgArray.forEach(function(element) {
-                if (y > element.y + camera_pos.y && y < element.y + camera_pos.y + 50 && x > element.x + camera_pos.x && x < element.x + camera_pos.x + 50) {
+                if (y > element.y*player.zoom + camera_pos.y && y < element.y*player.zoom + camera_pos.y + 50*player.zoom && x > element.x*player.zoom + camera_pos.x && x < element.x*player.zoom + camera_pos.x + 50*player.zoom) {
                     player.showUpg = element.id
                     
                 }
@@ -110,10 +113,13 @@ function updateTree() {
         let p1 = getTreeFromId(Object.keys(player.canvas.lines)[x])
         let p2 = getTreeFromId(player.canvas.lines[Object.keys(player.canvas.lines)[x]])
         ctx.beginPath()
-        ctx.moveTo(p1.x+camera_pos.x+25, p1.y+camera_pos.y+25)
-        ctx.lineTo(p2.x+camera_pos.x+25, p2.y+camera_pos.y+25)
-        ctx.lineWidth = 10
-        ctx.strokeStyle = player.treeUpgs.includes(Object.keys(player.canvas.lines)[x])?((player.canvas.lines[Object.keys(player.canvas.lines)[x]] == 'm13')?'#440':'#040'):'#444'
+        ctx.moveTo(p1.x*player.zoom+camera_pos.x+25*player.zoom, p1.y*player.zoom+camera_pos.y+25*player.zoom)
+        ctx.lineTo(p2.x*player.zoom+camera_pos.x+25*player.zoom, p2.y*player.zoom+camera_pos.y+25*player.zoom)
+        ctx.lineWidth = 10*player.zoom
+        if (player.canvas.TreeUpgs[p1.id].type == 'research') {
+            ctx.strokeStyle = player.treeUpgs.includes(Object.keys(player.canvas.lines)[x])?'#004':'#444'
+        } else ctx.strokeStyle = player.treeUpgs.includes(Object.keys(player.canvas.lines)[x])?((player.canvas.lines[Object.keys(player.canvas.lines)[x]] == 'm13')?'#440':'#040'):'#444'
+        
         ctx.stroke()
     }
     for(let x = 0; x < player.canvas.upgArray.length; x++) {

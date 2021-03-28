@@ -22,7 +22,11 @@
             </div>
         </div><br><div v-if="player.points && player.tabs[0] == 0">
             <div style="height: 90%; display: flex;">
-                <canvas id='tree' style="width: 80%; height: 100%; border: solid 3px white; background-color: #222;"></canvas>
+                <div style="width: 80%; height: 100%;">
+                    <canvas id='tree' style="width: 100%; height: 100%; border: solid 3px white; background-color: #222;"></canvas><br>
+                    Zoom <input type="range" v-model="player.zoom"
+                    min="0.5" max="4" value="0" step="0.01">
+                </div>
                 <div style="width: 20%; height: 100%; border: solid 3px white;"><br>
                     Floor {{ format(player.floor, 0) }}<br>
                     Tree Upgrades: {{ player.canvas.upgArray.length }}/100<br>
@@ -51,7 +55,7 @@
             <button onclick="if (confirm('You wanted to RESET your progress to new game?')) {wipe(true); location.reload()}">WIPE</button>
             <button onclick="exporty()">Export</button>
             <button onclick="importy()">Import</button><br><br>
-            The Treemental - v0.2 - Floor update<br>
+            The Treemental - v0.3 - Research update<br>
             Made by MrRedShark77
         </div><div v-if='player.tabs[0] == 2'>
             You have <h2>{{ format(player.prestige.points, 0) }}</h2> Prestige points.<br><br>
@@ -61,12 +65,39 @@
             When respec that, will back to previous floor.<br><br>
             <div class="table_center">
                 <div class="table_center" style="width: 900px;">
-                    <div v-for='x in UPGRADES.prestige.cols'>
+                    <div v-for='x in UPGRADES.prestige.cols' v-if="UPGRADES.prestige[x].unl()">
                         <button class="upgrade_button" v-on:click="UPGRADES.prestige.buy(x)"
                         v-bind:class="{closed: !UPGRADES.prestige.can(x) && !player.prestige.upgrades.includes(x), bought: player.prestige.upgrades.includes(x)}">
                             {{ UPGRADES.prestige[x].desc }}<br>
                             Cost: {{ format(UPGRADES.prestige[x].cost, 0) }} PP
                             <span v-if="UPGRADES.prestige[x].effDesc"><br>Currently: {{ UPGRADES.prestige[x].effDesc() }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div><div v-if='player.tabs[0] == 3'>
+            You have <h2>{{ format(player.research.points,0) }}</h2> research points.<br>
+            Have 5% chance to generate tree upgrade for getting research.<br><br>
+            <div class="table_center">
+                <div class="table_center" style="width: 900px;">
+                    <div v-for='x in UPGRADES.research.cols' v-if="UPGRADES.research[x].unl()">
+                        <button class="upgrade_button" v-on:click="UPGRADES.research.buy(x)"
+                        v-bind:class="{closed: !UPGRADES.research.can(x) && !player.research.upgrades.includes(x), bought: player.research.upgrades.includes(x)}">
+                            {{ UPGRADES.research[x].desc }}<br>
+                            Cost: {{ format(UPGRADES.research[x].cost, 0) }} RP
+                        </button><br>
+                        <div v-if="x == 1 && player.research.upgrades.includes(x)">Active: <input type="checkbox" v-model="player.autos.treeUpgs"></div>
+                    </div>
+                </div>
+            </div><br><div class="table_center">
+                <div class="table_center" style="width: 900px;">
+                    <div v-for='x in FUNCTIONS.buyables.research.cols'>
+                        <button class="upgrade_button" v-on:click="FUNCTIONS.buyables.research.buy(x)"
+                        v-bind:class="{closed: !FUNCTIONS.buyables.research.can(x)}">
+                            {{ FUNCTIONS.buyables.research[x].desc }}<br>
+                            Cost: {{ format(FUNCTIONS.buyables.research[x].cost(), 0) }} RP<br>
+                            Level: {{ format(FUNCTIONS.buyables.research.have(x),0) }}
+                            <span v-if="FUNCTIONS.buyables.research[x].effDesc"><br>Currently: {{ FUNCTIONS.buyables.research[x].effDesc() }}</span>
                         </button>
                     </div>
                 </div>

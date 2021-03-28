@@ -7,6 +7,7 @@ const TABS = {
         {id: 'Treemental', unl() { return true }, style: 'normal_tab'},
         {id: 'Options', unl() { return true }, style: 'normal_tab'},
         {id: 'Prestige', unl() { return player.prestige.unl }, style: 'normal_tab'},
+        {id: 'Research', unl() { return player.research.unl }, style: 'normal_tab'},
     ],
 }
 
@@ -21,6 +22,7 @@ const FUNCTIONS = {
             if (u.type == 'pow_points' && player.treeUpgs.includes(Object.keys(player.canvas.TreeUpgs)[x])) pow = pow.mul(TreeUpgs.effs[u.eff].eff(u.config))
         }
         if (player.prestige.upgrades.includes(2)) gain = gain.mul(UPGRADES.prestige[2].eff())
+        if (FUNCTIONS.buyables.research.have(1)>0) gain = gain.mul(FUNCTIONS.buyables.research[1].eff())
         if (player.prestige.upgrades.includes(3)) pow = pow.mul(1.15)
         return gain.pow(pow)
     },
@@ -36,7 +38,14 @@ const FUNCTIONS = {
             if (gain.gte(1e10)) gain = gain.div(1e10).pow(0.5).mul(1e10)
 
             if (player.prestige.upgrades.includes(5)) gain = gain.mul(UPGRADES.prestige[5].eff())
-            gain = gain.pow(E(player.floor).pow(E(1.5).pow((player.floor-1)**0.3)))
+            if (FUNCTIONS.buyables.research.have(2)>0) gain = gain.mul(FUNCTIONS.buyables.research[2].eff())
+            let exp = 0.3
+            if (player.floor >= 4) exp = 1/3
+            gain = gain.pow(E(player.floor).pow(E(1.5).pow((player.floor-1)**exp)))
+            
+            if (gain.gte(1e100)) gain = gain.div(1e100).pow(0.1).mul(1e100)
+
+            if (player.prestige.upgrades.includes(10)) gain = gain.mul(UPGRADES.prestige[10].eff())
             return gain.floor()
         },
         can() { return this.points().gte(1) },
@@ -48,16 +57,22 @@ const FUNCTIONS = {
         },
         doReset(msg, force=player.prestige.respec) {
             player.points = E(0)
-            player.treeUpgs = []
             player.showUpg = ''
+            let save = []
+            player.treeUpgs.forEach(e => {
+                if (player.canvas.TreeUpgs[e].type == 'research') save.push(e)
+            });
             if (force) {
                 if (msg != 'floor') player.floor = Math.max(player.floor-1,1)
+                save = []
                 resetTreeData()
             }
+            player.treeUpgs = save
             for (let x = 0; x < Object.keys(player.canvas.TreeUpgs).length; x++) {
                 let u = player.canvas.TreeUpgs[Object.keys(player.canvas.TreeUpgs)[x]]
                 if (u.eff == 'chance1') u.desc = `Gain ${format(TreeUpgs.effs.chance1.eff(u.config), 1)}x more points.`
             }
+            if (!getTreeFromId('m13')) addTreeUpg(0,0, 'm13')
         },
     },
     floor: {
@@ -67,6 +82,47 @@ const FUNCTIONS = {
                 player.floor++
                 FUNCTIONS.prestige.doReset('floor', true)
             }
+        },
+    },
+    buyables: {
+        research: {
+            have(x) { return player.research.buyables[x]?player.research.buyables[x]:0 },
+            can(x) { return player.research.points.gte(this[x].cost()) },
+            buy(x) {
+                if (this.can(x)) {
+                    player.research.points = player.research.points.sub(this[x].cost())
+                    if (player.research.buyables[x] === undefined) player.research.buyables[x] = 0
+                    player.research.buyables[x]++
+                }
+            },
+            cols: 3,
+            1: {
+                desc: 'Gain more points.',
+                cost(x=FUNCTIONS.buyables.research.have(1)) { return E(2).pow(x).floor() },
+                eff() {
+                    let lvl = FUNCTIONS.buyables.research.have(1)
+                    return E(2).pow(lvl**1.75)
+                },
+                effDesc(x=this.eff()) { return format(x, 1)+'x' },
+            },
+            2: {
+                desc: 'Gain more prestige points.',
+                cost(x=FUNCTIONS.buyables.research.have(2)) { return E(3).pow(x).floor() },
+                eff() {
+                    let lvl = FUNCTIONS.buyables.research.have(2)
+                    return E(3).pow(lvl)
+                },
+                effDesc(x=this.eff()) { return format(x, 1)+'x' },
+            },
+            3: {
+                desc: 'Gain more research points.',
+                cost(x=FUNCTIONS.buyables.research.have(3)) { return E(5).pow(x).floor() },
+                eff() {
+                    let lvl = FUNCTIONS.buyables.research.have(3)
+                    return E(2).pow(lvl)
+                },
+                effDesc(x=this.eff()) { return format(x, 1)+'x' },
+            },
         },
     },
 }
@@ -85,12 +141,14 @@ const UPGRADES = {
                 player.prestige.upgrades.push(x)
             }
         },
-        cols: 8,
+        cols: 10,
         1: {
+            unl() { return true },
             desc: 'Tree Upgrades are 12.5% stronger.',
             cost: E(1),
         },
         2: {
+            unl() { return true },
             desc: 'Gain more points based on unspent Prestige points.',
             cost: E(100),
             eff() {
@@ -100,14 +158,17 @@ const UPGRADES = {
             effDesc(x=this.eff()) { return format(x,0)+'x' },
         },
         3: {
+            unl() { return true },
             desc: 'Raise points gain by 1.15.',
             cost: E(2000),
         },
         4: {
-            desc: 'Unlock new Tree Upgrades (can spawn from generation only over 50 Tree Upgrades created).',
+            unl() { return true },
+            desc: 'Unlock new tree upgrades (can spawn from generation only over 50 Tree Upgrades created).',
             cost: E(1e7),
         },
         5: {
+            unl() { return true },
             desc: 'Gain more prestige points based on unspent prestige points.',
             cost: E(1e10),
             eff() {
@@ -117,10 +178,12 @@ const UPGRADES = {
             effDesc(x=this.eff()) { return format(x,1)+'x' },
         },
         6: {
+            unl() { return true },
             desc: 'Remove first Tree upgrade for multiplier.',
             cost: E(1e15),
         },
         7: {
+            unl() { return true },
             desc: 'Tree Upgrades are stronger based on your floor.',
             cost: E(1e30),
             eff() {
@@ -130,10 +193,51 @@ const UPGRADES = {
             effDesc(x=this.eff()) { return format(x.sub(1).mul(100),1)+'%' },
         },
         8: {
+            unl() { return true },
             desc: 'Tree upgrade "Gain more points based on tree upgrades bought." is raised by 2.',
             cost: E(1e50),
         },
-    }
+        9: {
+            unl() { return true },
+            desc: 'Unlock Research.',
+            cost: E(1e80),
+        },
+        10: {
+            unl() { return player.research.unl },
+            desc: 'Gain more prestige points based on unspent research points.',
+            cost: E(1e110),
+            eff() {
+                let eff = player.research.points.add(1)
+                return eff
+            },
+            effDesc(x=this.eff()) { return format(x,1)+'x' },
+        },
+    },
+    research: {
+        can(x) { return player.research.points.gte(this[x].cost) },
+        buy(x) {
+            if (this.can(x) && !player.research.upgrades.includes(x)) {
+                player.research.points = player.research.points.sub(this[x].cost)
+                player.research.upgrades.push(x)
+            }
+        },
+        cols: 3,
+        1: {
+            unl() { return true },
+            desc: 'Unlock Auto-Buy Tree Upgrades.',
+            cost: E(25),
+        },
+        2: {
+            unl() { return true },
+            desc: 'Can generate 4th tree upgrade instead of over 50 generated.',
+            cost: E(300),
+        },
+        3: {
+            unl() { return true },
+            desc: 'Unlock new tree upgrades (can spawn from generation only over 50 Tree Upgrades created).',
+            cost: E(15000),
+        },
+    },
 }
 
 function loop() {

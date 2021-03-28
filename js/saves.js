@@ -19,12 +19,15 @@ function calc(dt) {
     }
     player.points = player.points.add(FUNCTIONS.getPointsGain().mul(dt))
     if (player.points.gte(1e10)) player.prestige.unl = true
+    if (player.prestige.upgrades.includes(9)) player.research.unl = true
+    if (player.autos.treeUpgs && player.research.upgrades.includes(1)) buyAllTree()
     updateTree()
 }
 
 function getNewPlayer() {
     return {
         points: E(0),
+        zoom: 1,
         floor: 1,
         showUpg: '',
         treeUpgs: [],
@@ -43,6 +46,15 @@ function getNewPlayer() {
             points: E(0),
             upgrades: [],
             respec: false,
+        },
+        research: {
+            unl: false,
+            points: E(0),
+            upgrades: [],
+            buyables: {},
+        },
+        autos: {
+            treeUpgs: false,
         },
     }
 }
@@ -67,6 +79,7 @@ function checkIfUndefined() {
     var data = getNewPlayer()
 
     if (player.points === undefined) player.points = data.points
+    if (player.zoom === undefined) player.zoom = data.zoom
     if (player.treeUpgs === undefined) player.treeUpgs = data.treeUpgs
     if (player.floor === undefined) player.floor = data.floor
 
@@ -87,11 +100,29 @@ function checkIfUndefined() {
     if (p.respec === undefined) p.points = data.prestige.respec
 
     player.prestige = p
+
+    let r = player.research
+    if (r === undefined) r = data.research
+
+    if (r.unl === undefined) r.unl = data.research.unl
+    if (r.points === undefined) r.points = data.research.points
+    if (r.upgrades === undefined) r.upgrades = data.research.upgrades
+    if (r.buyables === undefined) r.buyables = data.research.buyables
+
+    player.research = r
+
+    let a = player.autos
+    if (a === undefined) a = data.autos
+
+    if (a.treeUpgs === undefined) a.treeUpgs = data.autos.treeUpgs
+
+    player.autos = a
 }
 
 function convertToExpNum() {
     player.points = E(player.points)
     player.prestige.points = E(player.prestige.points)
+    player.research.points = E(player.research.points)
 }
 
 function save(){

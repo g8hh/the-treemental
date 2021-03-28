@@ -25,6 +25,7 @@ function calc(dt) {
 function getNewPlayer() {
     return {
         points: E(0),
+        floor: 1,
         showUpg: '',
         treeUpgs: [],
         tabs: [0, 0],
@@ -67,6 +68,7 @@ function checkIfUndefined() {
 
     if (player.points === undefined) player.points = data.points
     if (player.treeUpgs === undefined) player.treeUpgs = data.treeUpgs
+    if (player.floor === undefined) player.floor = data.floor
 
     let c = player.canvas
     if (c === undefined) c = data.canvas

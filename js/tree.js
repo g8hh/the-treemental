@@ -59,6 +59,7 @@ var TreeUpgs = {
             eff(config) {
                 let eff = player.points.max(1).log10().add(1)
                 if (player.prestige.upgrades.includes(1)) eff = eff.pow(1.125)
+                if (player.prestige.upgrades.includes(7)) eff = eff.pow(UPGRADES.prestige[7].eff())
                 return eff
             },
             effDesc(x=this.eff()) { return format(x,2)+'x' },
@@ -67,13 +68,18 @@ var TreeUpgs = {
             eff(config) {
                 let base = 2
                 if (player.prestige.upgrades.includes(1)) base = base * 1.125
-                return E(base).pow(player.treeUpgs.length**(0.6))
+                if (player.prestige.upgrades.includes(7)) base = base * UPGRADES.prestige[7].eff().toNumber()
+                let eff = E(base).pow(player.treeUpgs.length**(0.6))
+                if (player.prestige.upgrades.includes(8)) eff = eff.pow(2)
+                return eff
             },
             effDesc(x=this.eff()) { return format(x,1)+'x' },
         },
         chance4: {
             eff(config) {
-                return E(6).pow(player.prestige.points.max(1).log10().pow(0.8))
+                let eff = E(6).pow(player.prestige.points.max(1).log10().pow(0.8))
+                if (player.prestige.upgrades.includes(7)) eff = eff.pow(UPGRADES.prestige[7].eff())
+                return eff
             },
             effDesc(x=this.eff()) { return format(x,1)+'x' },
         },
@@ -137,12 +143,15 @@ var TreeUpgs = {
                         if (length >= 75) length = length**1.125
                         else if (length >= 50) length = length**1.1
                         else if (length >= 25) length = length**1.075
+                        var f = E(2+(Math.max(player.floor-1,1)-1)/5).pow(player.floor-1)
 
-                        let cost = E(200).mul(E(5+length/5).pow(length-2)).floor()
+                        let cost = E(200).mul(E(5+length/5).mul(f).pow(length-2).pow(f)).floor()
 
                         for (let i = 1; i <= Object.keys(UPGCHANCES.points.ratio[ratioId]).length; i++) {
                             if (UPGCHANCES.points.ratio[ratioId][i][0] >= chance && chance > (UPGCHANCES.points.ratio[ratioId][i+1]?UPGCHANCES.points.ratio[ratioId][i+1][0]:0)) {
-                                player.canvas.TreeUpgs[newID] = UPGCHANCES.points.upgs[UPGCHANCES.points.ratio[ratioId][i][1]](cost)
+                                var set = i
+                                if (player.prestige.upgrades.includes(6)) set = Math.max(set, 2)
+                                player.canvas.TreeUpgs[newID] = UPGCHANCES.points.upgs[UPGCHANCES.points.ratio[ratioId][set][1]](cost)
                                 break
                             }
                         }
@@ -155,6 +164,10 @@ var TreeUpgs = {
         }
     },
 }
+
+window.addEventListener('keydown', event=>{
+    if (event.keyCode == 77 && player.tabs[0] == 0) buyAllTree()
+})
 
 function buyAllTree() {
     for (let x = 0; x < Object.keys(player.canvas.TreeUpgs).length; x++) {

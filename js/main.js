@@ -33,6 +33,10 @@ const FUNCTIONS = {
             let gain = player.points.pow(1/10).div(10)
             if (gain.lt(1)) return E(0)
             if (gain.gte(1e4)) gain = gain.div(1e4).pow(0.5).mul(1e4)
+            if (gain.gte(1e10)) gain = gain.div(1e10).pow(0.5).mul(1e10)
+
+            if (player.prestige.upgrades.includes(5)) gain = gain.mul(UPGRADES.prestige[5].eff())
+            gain = gain.pow(E(player.floor).pow(E(1.5).pow((player.floor-1)**0.3)))
             return gain.floor()
         },
         can() { return this.points().gte(1) },
@@ -42,14 +46,26 @@ const FUNCTIONS = {
                 this.doReset()
             }
         },
-        doReset() {
+        doReset(msg, force=player.prestige.respec) {
             player.points = E(0)
             player.treeUpgs = []
             player.showUpg = ''
-            if (player.prestige.respec) resetTreeData()
+            if (force) {
+                if (msg != 'floor') player.floor = Math.max(player.floor-1,1)
+                resetTreeData()
+            }
             for (let x = 0; x < Object.keys(player.canvas.TreeUpgs).length; x++) {
                 let u = player.canvas.TreeUpgs[Object.keys(player.canvas.TreeUpgs)[x]]
                 if (u.eff == 'chance1') u.desc = `Gain ${format(TreeUpgs.effs.chance1.eff(u.config), 1)}x more points.`
+            }
+        },
+    },
+    floor: {
+        can() { return player.canvas.upgArray.length >= 100 && player.treeUpgs.length >= player.canvas.upgArray.length },
+        go() {
+            if (this.can()) {
+                player.floor++
+                FUNCTIONS.prestige.doReset('floor', true)
             }
         },
     },
@@ -57,6 +73,7 @@ const FUNCTIONS = {
 
 function resetTreeData() {
     player.canvas = getNewPlayer().canvas
+    canvas()
 }
 
 const UPGRADES = {
@@ -68,7 +85,7 @@ const UPGRADES = {
                 player.prestige.upgrades.push(x)
             }
         },
-        cols: 4,
+        cols: 8,
         1: {
             desc: 'Tree Upgrades are 12.5% stronger.',
             cost: E(1),
@@ -87,8 +104,34 @@ const UPGRADES = {
             cost: E(2000),
         },
         4: {
-            desc: 'Unlock new Tree Upgrade (can spawn from generation only over 50 Tree Upgrades created).',
+            desc: 'Unlock new Tree Upgrades (can spawn from generation only over 50 Tree Upgrades created).',
             cost: E(1e7),
+        },
+        5: {
+            desc: 'Gain more prestige points based on unspent prestige points.',
+            cost: E(1e10),
+            eff() {
+                let eff = player.prestige.points.max(1).log10().pow(1.5).add(1)
+                return eff
+            },
+            effDesc(x=this.eff()) { return format(x,1)+'x' },
+        },
+        6: {
+            desc: 'Remove first Tree upgrade for multiplier.',
+            cost: E(1e15),
+        },
+        7: {
+            desc: 'Tree Upgrades are stronger based on your floor.',
+            cost: E(1e30),
+            eff() {
+                let eff = E(player.floor).max(1).pow(1/4)
+                return eff
+            },
+            effDesc(x=this.eff()) { return format(x.sub(1).mul(100),1)+'%' },
+        },
+        8: {
+            desc: 'Tree upgrade "Gain more points based on tree upgrades bought." is raised by 2.',
+            cost: E(1e50),
         },
     }
 }

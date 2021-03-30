@@ -10,6 +10,13 @@ function tu(o) {
     return new treeUpg(o.x,o.y,o.id)
 }
 
+ExpantaNum.prototype.softcap = function (start,force,mode){
+    var x = this.clone()
+    if([0,"pow"].includes(mode)) x = x.div(start).pow(force).mul(start).min(x)
+    if([1,"mul"].includes(mode)) x = x.sub(start).div(force).add(start).min(x)
+    return x
+}
+
 function calc(dt) {
     if (retrieveCanvasData() && player.canvasReady) {
         canvas()
@@ -21,6 +28,7 @@ function calc(dt) {
     if (player.points.gte(1e10)) player.prestige.unl = true
     if (player.prestige.upgrades.includes(9)) player.research.unl = true
     if (player.autos.treeUpgs && player.research.upgrades.includes(1)) buyAllTree()
+
     updateTree()
 }
 

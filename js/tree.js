@@ -30,19 +30,19 @@ const UPGCHANCES = {
         upgs: {
             1(cost) {
                 let mult = randomInt(3,7)
-                return new treeUpg2('points', `Gain ${format(mult**(player.prestige.upgrades.includes(1)?1.125:1), 1)}x more points.`, cost, 'chance1', {mult: mult})
+                return new treeUpg2('points', `[1] Gain ${format(mult**(player.prestige.upgrades.includes(1)?1.125:1), 1)}x more points.`, cost, 'chance1', {mult: mult})
             },
             2(cost) {
-                return new treeUpg2('points', 'Unspent points boost points gain at reduced rate.', cost, 'chance2', {})
+                return new treeUpg2('points', '[2] Unspent points boost points gain at reduced rate.', cost, 'chance2', {})
             },
             3(cost) {
-                return new treeUpg2('points', 'Gain more points based on tree upgrades bought.', cost, 'chance3', {})
+                return new treeUpg2('points', '[3] Gain more points based on tree upgrades bought.', cost, 'chance3', {})
             },
             4(cost) {
-                return new treeUpg2('points', 'Unspent prestige points boost points at reduced rate.', cost, 'chance4', {})
+                return new treeUpg2('points', '[4] Unspent prestige points boost points at reduced rate.', cost, 'chance4', {})
             },
             5(cost) {
-                return new treeUpg2('points', 'Unspent research points boost points at reduced rate.', cost, 'chance5', {})
+                return new treeUpg2('points', '[5] Unspent research points boost points at reduced rate.', cost, 'chance5', {})
             },
         },
     },
@@ -70,6 +70,7 @@ var TreeUpgs = {
                 let eff = player.points.max(1).log10().add(1)
                 if (player.prestige.upgrades.includes(1)) eff = eff.pow(1.125)
                 if (player.prestige.upgrades.includes(7)) eff = eff.pow(UPGRADES.prestige[7].eff())
+                if (player.research.upgrades.includes(4)) eff = eff.pow(2.5)
                 return eff
             },
             effDesc(x=this.eff()) { return format(x,2)+'x' },
@@ -81,6 +82,7 @@ var TreeUpgs = {
                 if (player.prestige.upgrades.includes(7)) base = base * UPGRADES.prestige[7].eff().toNumber()
                 let eff = E(base).pow(player.treeUpgs.length**(0.6))
                 if (player.prestige.upgrades.includes(8)) eff = eff.pow(2)
+                if (player.research.upgrades.includes(4)) eff = eff.pow(2.5)
                 return eff
             },
             effDesc(x=this.eff()) { return format(x,1)+'x' },
@@ -187,8 +189,7 @@ function getTreeCost() {
 
 function createResearchTree(newID) {
     let cost = getTreeCost()
-    let r = E(1)
-    if (FUNCTIONS.buyables.research.have(3)>0) r = r.mul(FUNCTIONS.buyables.research[3].eff())
+    let r = FUNCTIONS.getRPGain()
     player.canvas.TreeUpgs[newID] = new treeUpg2('research', 'Get '+format(r,0)+' research points.', cost, 'research', {research: r})
 }
 
@@ -211,6 +212,7 @@ function createTreeUpg(newID) {
 
 window.addEventListener('keydown', event=>{
     if (event.keyCode == 77) buyAllTree()
+    if (event.keyCode == 80) FUNCTIONS.prestige.reset()
 })
 
 function buyAllTree() {

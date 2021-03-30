@@ -1,9 +1,12 @@
 var camera_pos = {x:0,y:0}
 var starting_cp = {x:0,y:0}
 var starting_mouse = {x:0,y:0}
+var previous = ''
 var moved = false
 var onTree = false
 var cv, ctx
+
+function lerp(start, end, t) { return start*(1-t)+end*t }
 
 function treeUpg(x, y, id) {
     this.x = x
@@ -79,7 +82,6 @@ function canvas() {
             player.canvas.upgArray.forEach(function(element) {
                 if (y > element.y*player.zoom + camera_pos.y && y < element.y*player.zoom + camera_pos.y + 50*player.zoom && x > element.x*player.zoom + camera_pos.x && x < element.x*player.zoom + camera_pos.x + 50*player.zoom) {
                     player.showUpg = element.id
-                    
                 }
             });
         }, false);

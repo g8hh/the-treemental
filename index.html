@@ -2,6 +2,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="This game can generate random upgrades in position like rpg skill tree!">
+    <meta name="keywords" content="HTML, CSS, JavaScript">
+    <meta name="author" content="MrRedShark77">
     <link rel="stylesheet" href="style.css">
 
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
@@ -13,6 +16,7 @@
     <script src="js/v.js"></script>
 
     <title>The Treemental</title>
+    
 </head>
 <body onload="loadGame()">
     <div id='app'>
@@ -31,8 +35,8 @@
                     Floor {{ format(player.floor, 0) }}<br>
                     Tree Upgrades: {{ player.canvas.upgArray.length }}/100<br>
                     {{ 100-player.treeUpgs.length }} boughts left<br> 
-                    <button style="width: 90%; height: 30px; font-size: 22px; font-weight: bold;" v-bind:class="{closed: !FUNCTIONS.floor.can()}" onclick="FUNCTIONS.floor.go()">Go to next floor {{ format(player.floor+1, 0) }}</button><br>
-                    <button style="width: 90%; height: 30px; font-size: 22px; font-weight: bold;" onclick="buyAllTree()">Buy All Upgrades [M]</button>
+                    <button style="width: 90%; font-size: 22px; font-weight: bold;" v-bind:class="{closed: !FUNCTIONS.floor.can()}" onclick="FUNCTIONS.floor.go()">Go to next floor {{ format(player.floor+1, 0) }}</button><br>
+                    <button style="width: 90%; font-size: 22px; font-weight: bold;" onclick="buyAllTree()">Buy All Upgrades [M]</button>
                     <div style="height: 90px;"><br>
                         You have <h2>{{ format(player.points,0) }}</h2> Points.<br>
                         (+{{format(FUNCTIONS.getPointsGain(),0)}}/s)
@@ -44,7 +48,7 @@
                             Cost: {{format(player.canvas.TreeUpgs[player.showUpg].cost,0)}} Points.
                             <span v-if='TreeUpgs.effs[player.canvas.TreeUpgs[player.showUpg].eff]?TreeUpgs.effs[player.canvas.TreeUpgs[player.showUpg].eff].effDesc:false'><br>Currently: {{ TreeUpgs.effs[player.canvas.TreeUpgs[player.showUpg].eff].effDesc() }}</span>
                         </div><br>
-                        <button style="width: 90%; height: 30px; font-size: 22px; font-weight: bold;"
+                        <button style="width: 90%; font-size: 22px; font-weight: bold;"
                         v-if='!player.treeUpgs.includes(player.showUpg)'
                         v-bind:class='{closed: !TreeUpgs.can(player.showUpg)}'
                         v-on:click='TreeUpgs.buy(player.showUpg)'>Buy</button>
@@ -56,7 +60,7 @@
             <button onclick="if (confirm('You wanted to RESET your progress to new game?')) {wipe(true); location.reload()}">WIPE</button>
             <button onclick="exporty()">Export</button>
             <button onclick="importy()">Import</button><br><br>
-            The Treemental - v0.3 - Research update<br>
+            The Treemental - v0.3.1<br>
             Made by MrRedShark77
         </div><div v-if='player.tabs[0] == 2'>
             You have <h2>{{ format(player.prestige.points, 0) }}</h2> Prestige points.<br><br>

@@ -26,6 +26,13 @@ const FUNCTIONS = {
         if (player.prestige.upgrades.includes(3)) pow = pow.mul(1.15)
         return gain.pow(pow)
     },
+    getRPGain() {
+        let gain = E(1)
+        if (FUNCTIONS.buyables.research.have(3)>0) gain = gain.mul(FUNCTIONS.buyables.research[3].eff())
+        if (player.prestige.upgrades.includes(11)) gain = gain.mul(UPGRADES.prestige[11].eff())
+        if (player.prestige.upgrades.includes(13)) gain = gain.pow(1.25)
+        return gain
+    },
     chTabs(i, x) {
         player.tabs[i] = x
         for (let j = i+1; j < player.tabs.length; j++) player.tabs[j] = 0
@@ -40,12 +47,14 @@ const FUNCTIONS = {
             if (player.prestige.upgrades.includes(5)) gain = gain.mul(UPGRADES.prestige[5].eff())
             if (FUNCTIONS.buyables.research.have(2)>0) gain = gain.mul(FUNCTIONS.buyables.research[2].eff())
             let exp = 0.3
-            if (player.floor >= 4) exp = 1/3
+            if (player.floor >= 4) exp = 0.3+player.floor/20
             gain = gain.pow(E(player.floor).pow(E(1.5).pow((player.floor-1)**exp)))
             
             if (gain.gte(1e100)) gain = gain.div(1e100).pow(0.1).mul(1e100)
 
             if (player.prestige.upgrades.includes(10)) gain = gain.mul(UPGRADES.prestige[10].eff())
+
+            gain = gain.softcap(1e220,0.1,0)
             return gain.floor()
         },
         can() { return this.points().gte(1) },
@@ -101,7 +110,9 @@ const FUNCTIONS = {
                 cost(x=FUNCTIONS.buyables.research.have(1)) { return E(2).pow(x).floor() },
                 eff() {
                     let lvl = FUNCTIONS.buyables.research.have(1)
-                    return E(2).pow(lvl**1.75)
+                    let base = 2
+                    if (player.prestige.upgrades.includes(12)) base *= 1.5
+                    return E(base).pow(lvl**1.75)
                 },
                 effDesc(x=this.eff()) { return format(x, 1)+'x' },
             },
@@ -141,7 +152,7 @@ const UPGRADES = {
                 player.prestige.upgrades.push(x)
             }
         },
-        cols: 10,
+        cols: 13,
         1: {
             unl() { return true },
             desc: 'Tree Upgrades are 12.5% stronger.',
@@ -212,6 +223,26 @@ const UPGRADES = {
             },
             effDesc(x=this.eff()) { return format(x,1)+'x' },
         },
+        11: {
+            unl() { return player.research.unl },
+            desc: 'Gain more research points based on unspent points.',
+            cost: E(1e140),
+            eff() {
+                let eff = player.points.max(1).log10().add(1).pow(1/2)
+                return eff
+            },
+            effDesc(x=this.eff()) { return format(x,1)+'x' },
+        },
+        12: {
+            unl() { return player.research.unl },
+            desc: 'Research buyables 1 are 50% stronger.',
+            cost: E(1e175),
+        },
+        13: {
+            unl() { return player.research.unl },
+            desc: 'Raise research points gain by 1.25.',
+            cost: E(1e210),
+        },
     },
     research: {
         can(x) { return player.research.points.gte(this[x].cost) },
@@ -221,7 +252,7 @@ const UPGRADES = {
                 player.research.upgrades.push(x)
             }
         },
-        cols: 3,
+        cols: 4,
         1: {
             unl() { return true },
             desc: 'Unlock Auto-Buy Tree Upgrades.',
@@ -236,6 +267,11 @@ const UPGRADES = {
             unl() { return true },
             desc: 'Unlock new tree upgrades (can spawn from generation only over 50 Tree Upgrades created).',
             cost: E(15000),
+        },
+        4: {
+            unl() { return true },
+            desc: 'Raise tree upgrades 2-3 by 2.5.',
+            cost: E(1e7),
         },
     },
 }

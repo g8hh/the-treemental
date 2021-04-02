@@ -30,19 +30,19 @@ const UPGCHANCES = {
         upgs: {
             1(cost) {
                 let mult = randomInt(3,7)
-                return new treeUpg2('points', `[1] Gain ${format(mult**(player.prestige.upgrades.includes(1)?1.125:1), 1)}x more scoochs.`, cost, 'chance1', {mult: mult})
+                return new treeUpg2('points', `[1] Gain ${format(mult**(player.prestige.upgrades.includes(1)?1.125:1), 1)}x more points.`, cost, 'chance1', {mult: mult})
             },
             2(cost) {
-                return new treeUpg2('points', '[2] Unspent scoochs boost scoochs gain at reduced rate.', cost, 'chance2', {})
+                return new treeUpg2('points', '[2] Unspent points boost points gain at reduced rate.', cost, 'chance2', {})
             },
             3(cost) {
-                return new treeUpg2('points', '[3] Gain more scoochs based on spam upgrades bought.', cost, 'chance3', {})
+                return new treeUpg2('points', '[3] Gain more points based on tree upgrades bought.', cost, 'chance3', {})
             },
             4(cost) {
-                return new treeUpg2('points', '[4] Unspent super scoochs boost scoochs at reduced rate.', cost, 'chance4', {})
+                return new treeUpg2('points', '[4] Unspent prestige points boost points at reduced rate.', cost, 'chance4', {})
             },
             5(cost) {
-                return new treeUpg2('points', '[5] Unspent secret scoochs boost scoochs at reduced rate.', cost, 'chance5', {})
+                return new treeUpg2('points', '[5] Unspent research points boost points at reduced rate.', cost, 'chance5', {})
             },
         },
     },
@@ -123,7 +123,7 @@ var TreeUpgs = {
             effDesc(x=this.eff()) { return format(x,1)+'x' },
         },
         */
-        'm13': new treeUpg2('start', 'Start to generate Scoochs.', E(0), 'start', {}),
+        'm13': new treeUpg2('start', 'Start to generate Points.', E(0), 'start', {}),
     },
     can(id) { return ((id == 'm13')?true:player.treeUpgs.includes(player.canvas.lines[id])) && player.points.gte(player.canvas.TreeUpgs[id].cost) },
     buy(id) {
@@ -190,7 +190,7 @@ function getTreeCost() {
 function createResearchTree(newID) {
     let cost = getTreeCost()
     let r = FUNCTIONS.getRPGain()
-    player.canvas.TreeUpgs[newID] = new treeUpg2('research', 'Get '+format(r,0)+' secret scoochs.', cost, 'research', {research: r})
+    player.canvas.TreeUpgs[newID] = new treeUpg2('research', 'Get '+format(r,0)+' research points.', cost, 'research', {research: r})
 }
 
 function createTreeUpg(newID) {

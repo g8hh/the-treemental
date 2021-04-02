@@ -4,10 +4,10 @@ var player
 
 const TABS = {
     1: [
-        {id: 'Scoochs', unl() { return true }, style: 'normal_tab'},
-        {id: 'Stonks', unl() { return true }, style: 'normal_tab'},
-        {id: 'Super', unl() { return player.prestige.unl }, style: 'normal_tab'},
-        {id: 'Secret', unl() { return player.research.unl }, style: 'normal_tab'},
+        {id: 'Treemental', unl() { return true }, style: 'normal_tab'},
+        {id: 'Options', unl() { return true }, style: 'normal_tab'},
+        {id: 'Prestige', unl() { return player.prestige.unl }, style: 'normal_tab'},
+        {id: 'Research', unl() { return player.research.unl }, style: 'normal_tab'},
     ],
 }
 
@@ -106,7 +106,7 @@ const FUNCTIONS = {
             },
             cols: 3,
             1: {
-                desc: 'Gain more scoochs.',
+                desc: 'Gain more points.',
                 cost(x=FUNCTIONS.buyables.research.have(1)) { return E(2).pow(x).floor() },
                 eff() {
                     let lvl = FUNCTIONS.buyables.research.have(1)
@@ -117,7 +117,7 @@ const FUNCTIONS = {
                 effDesc(x=this.eff()) { return format(x, 1)+'x' },
             },
             2: {
-                desc: 'Gain more super scoochs.',
+                desc: 'Gain more prestige points.',
                 cost(x=FUNCTIONS.buyables.research.have(2)) { return E(3).pow(x).floor() },
                 eff() {
                     let lvl = FUNCTIONS.buyables.research.have(2)
@@ -126,7 +126,7 @@ const FUNCTIONS = {
                 effDesc(x=this.eff()) { return format(x, 1)+'x' },
             },
             3: {
-                desc: 'Gain more secret scoochs.',
+                desc: 'Gain more research points.',
                 cost(x=FUNCTIONS.buyables.research.have(3)) { return E(5).pow(x).floor() },
                 eff() {
                     let lvl = FUNCTIONS.buyables.research.have(3)
@@ -155,12 +155,12 @@ const UPGRADES = {
         cols: 13,
         1: {
             unl() { return true },
-            desc: 'Spam Upgrades are 12.5% stronger.',
+            desc: 'Tree Upgrades are 12.5% stronger.',
             cost: E(1),
         },
         2: {
             unl() { return true },
-            desc: 'Gain more scoochs based on unspent super scoochs.',
+            desc: 'Gain more points based on unspent Prestige points.',
             cost: E(100),
             eff() {
                 let eff = player.prestige.points.add(1)
@@ -170,17 +170,17 @@ const UPGRADES = {
         },
         3: {
             unl() { return true },
-            desc: 'Raise scoochs gain by 1.15.',
+            desc: 'Raise points gain by 1.15.',
             cost: E(2000),
         },
         4: {
             unl() { return true },
-            desc: 'Unlock new spam upgrades (can spawn from generation only over 50 Spam Upgrades created).',
+            desc: 'Unlock new tree upgrades (can spawn from generation only over 50 Tree Upgrades created).',
             cost: E(1e7),
         },
         5: {
             unl() { return true },
-            desc: 'Gain more super scoochs based on unspent super scoochs.',
+            desc: 'Gain more prestige points based on unspent prestige points.',
             cost: E(1e10),
             eff() {
                 let eff = player.prestige.points.max(1).log10().pow(1.5).add(1)
@@ -190,12 +190,12 @@ const UPGRADES = {
         },
         6: {
             unl() { return true },
-            desc: 'Remove first Spam upgrade for multiplier.',
+            desc: 'Remove first Tree upgrade for multiplier.',
             cost: E(1e15),
         },
         7: {
             unl() { return true },
-            desc: 'Spam Upgrades are stronger based on your meta-scoochs.',
+            desc: 'Tree Upgrades are stronger based on your floor.',
             cost: E(1e30),
             eff() {
                 let eff = E(player.floor).max(1).pow(1/4)
@@ -205,17 +205,17 @@ const UPGRADES = {
         },
         8: {
             unl() { return true },
-            desc: 'Spam upgrade "Gain more scoochs based on spam upgrades bought." is raised by 2.',
+            desc: 'Tree upgrade "Gain more points based on tree upgrades bought." is raised by 2.',
             cost: E(1e50),
         },
         9: {
             unl() { return true },
-            desc: 'Unlock Secret.',
+            desc: 'Unlock Research.',
             cost: E(1e80),
         },
         10: {
             unl() { return player.research.unl },
-            desc: 'Gain more super scoochs based on unspent secret scoochs.',
+            desc: 'Gain more prestige points based on unspent research points.',
             cost: E(1e110),
             eff() {
                 let eff = player.research.points.add(1)
@@ -225,7 +225,7 @@ const UPGRADES = {
         },
         11: {
             unl() { return player.research.unl },
-            desc: 'Gain more secret scoochs based on unspent scoochs.',
+            desc: 'Gain more research points based on unspent points.',
             cost: E(1e140),
             eff() {
                 let eff = player.points.max(1).log10().add(1).pow(1/2)
@@ -235,12 +235,12 @@ const UPGRADES = {
         },
         12: {
             unl() { return player.research.unl },
-            desc: 'Secret buyables 1 are 50% stronger.',
+            desc: 'Research buyables 1 are 50% stronger.',
             cost: E(1e175),
         },
         13: {
             unl() { return player.research.unl },
-            desc: 'Raise secret scoochs gain by 1.25.',
+            desc: 'Raise research points gain by 1.25.',
             cost: E(1e210),
         },
     },
@@ -255,22 +255,22 @@ const UPGRADES = {
         cols: 4,
         1: {
             unl() { return true },
-            desc: 'Unlock Auto-Spam.',
+            desc: 'Unlock Auto-Buy Tree Upgrades.',
             cost: E(25),
         },
         2: {
             unl() { return true },
-            desc: 'Can generate 4th spam upgrade instead of over 50 generated.',
+            desc: 'Can generate 4th tree upgrade instead of over 50 generated.',
             cost: E(300),
         },
         3: {
             unl() { return true },
-            desc: 'Unlock new spam upgrades (can spawn from generation only over 50 Spam Upgrades created).',
+            desc: 'Unlock new tree upgrades (can spawn from generation only over 50 Tree Upgrades created).',
             cost: E(15000),
         },
         4: {
             unl() { return true },
-            desc: 'Raise spam upgrades 2-3 by 2.5.',
+            desc: 'Raise tree upgrades 2-3 by 2.5.',
             cost: E(1e7),
         },
     },

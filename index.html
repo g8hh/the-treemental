@@ -1,0 +1,113 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="This game can generate random upgrades in position like rpg skill tree!">
+    <meta name="keywords" content="HTML, CSS, JavaScript">
+    <meta name="author" content="MrRedShark77">
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="js/ExpantaNum.js"></script>
+    <script src="js/saves.js"></script>
+    <script src="js/tree.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/canvas.js"></script>
+    <script src="js/v.js"></script>
+
+    <title>The Treemental</title>
+    
+</head>
+<body onload="loadGame()">
+    <div id='app'>
+        <div class="table_center">
+            <div v-for="x in TABS[1]">
+                <button style="height: 30px; font-size: 22px; font-weight: bold;" v-if="x.unl()" v-on:click="FUNCTIONS.chTabs(0,TABS[1].indexOf(x))">{{ x.id }}</button>
+            </div>
+        </div><br><div v-if="player.points && player.tabs[0] == 0">
+            <div style="height: 90%; display: flex;">
+                <div style="width: 80%; height: 100%;">
+                    <canvas id='tree' style="width: 100%; height: 100%; border: solid 3px white; background-color: #222;"></canvas><br>
+                    Zoom <input type="range" v-model="player.zoom"
+                    min="0.5" max="4" value="0" step="0.01">
+                </div>
+                <div style="width: 20%; height: 100%; border: solid 3px white;"><br>
+                    Floor {{ format(player.floor, 0) }}<br>
+                    Tree Upgrades: {{ player.canvas.upgArray.length }}/100<br>
+                    {{ 100-player.treeUpgs.length }} boughts left<br> 
+                    <button style="width: 90%; font-size: 22px; font-weight: bold;" v-bind:class="{closed: !FUNCTIONS.floor.can()}" onclick="FUNCTIONS.floor.go()">Go to next floor {{ format(player.floor+1, 0) }}</button><br>
+                    <button style="width: 90%; font-size: 22px; font-weight: bold;" onclick="buyAllTree()">Buy All Upgrades [M]</button>
+                    <div style="height: 90px;"><br>
+                        You have <h2>{{ format(player.points,0) }}</h2> Points.<br>
+                        (+{{format(FUNCTIONS.getPointsGain(),0)}}/s)
+                    </div><div v-if='player.showUpg != ""'>
+                        <div style="height: 100px;">
+                            {{player.canvas.TreeUpgs[player.showUpg].desc}}
+                        </div><br>
+                        <div style="height: 50px;">
+                            Cost: {{format(player.canvas.TreeUpgs[player.showUpg].cost,0)}} Points.
+                            <span v-if='TreeUpgs.effs[player.canvas.TreeUpgs[player.showUpg].eff]?TreeUpgs.effs[player.canvas.TreeUpgs[player.showUpg].eff].effDesc:false'><br>Currently: {{ TreeUpgs.effs[player.canvas.TreeUpgs[player.showUpg].eff].effDesc() }}</span>
+                        </div><br>
+                        <button style="width: 90%; font-size: 22px; font-weight: bold;"
+                        v-if='!player.treeUpgs.includes(player.showUpg)'
+                        v-bind:class='{closed: !TreeUpgs.can(player.showUpg)}'
+                        v-on:click='TreeUpgs.buy(player.showUpg)'>Buy</button>
+                    </div>
+                </div>
+            </div>
+        </div><div v-if='player.tabs[0] == 1'>
+            <button onclick="save()">Save</button>
+            <button onclick="if (confirm('You wanted to RESET your progress to new game?')) {wipe(true); location.reload()}">WIPE</button>
+            <button onclick="exporty()">Export</button>
+            <button onclick="importy()">Import</button><br><br>
+            The Treemental - v0.3.1<br>
+            Made by MrRedShark77
+        </div><div v-if='player.tabs[0] == 2'>
+            You have <h2>{{ format(player.prestige.points, 0) }}</h2> Prestige points.<br><br>
+            <button class="prestige_button" v-bind:class="{closed: !FUNCTIONS.prestige.can()}" onclick="FUNCTIONS.prestige.reset()"><span v-if="FUNCTIONS.prestige.can()">Gain <b>{{ format(FUNCTIONS.prestige.points(),0) }}</b> Prestige points.</span><span v-if="!FUNCTIONS.prestige.can()">Reach <b>1e10</b> points to prestige.</span></button><br>
+            <button onclick="FUNCTIONS.prestige.doReset()">Reset without gaining prestige points.</button><br>
+            <button onclick="player.prestige.respec = !player.prestige.respec">Respec Tree Upgrades data: {{ player.prestige.respec?'ON':'OFF' }}</button><br>
+            When respec that, will back to previous floor.<br><br>
+            <div class="table_center">
+                <div class="table_center" style="width: 900px;">
+                    <div v-for='x in UPGRADES.prestige.cols' v-if="UPGRADES.prestige[x].unl()">
+                        <button class="upgrade_button" v-on:click="UPGRADES.prestige.buy(x)"
+                        v-bind:class="{closed: !UPGRADES.prestige.can(x) && !player.prestige.upgrades.includes(x), bought: player.prestige.upgrades.includes(x)}">
+                            {{ UPGRADES.prestige[x].desc }}<br>
+                            Cost: {{ format(UPGRADES.prestige[x].cost, 0) }} PP
+                            <span v-if="UPGRADES.prestige[x].effDesc"><br>Currently: {{ UPGRADES.prestige[x].effDesc() }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div><div v-if='player.tabs[0] == 3'>
+            You have <h2>{{ format(player.research.points,0) }}</h2> research points.<br>
+            Have 5% chance to generate tree upgrade for getting research.<br><br>
+            <div class="table_center">
+                <div class="table_center" style="width: 900px;">
+                    <div v-for='x in UPGRADES.research.cols' v-if="UPGRADES.research[x].unl()">
+                        <button class="upgrade_button" v-on:click="UPGRADES.research.buy(x)"
+                        v-bind:class="{closed: !UPGRADES.research.can(x) && !player.research.upgrades.includes(x), bought: player.research.upgrades.includes(x)}">
+                            {{ UPGRADES.research[x].desc }}<br>
+                            Cost: {{ format(UPGRADES.research[x].cost, 0) }} RP
+                        </button><br>
+                        <div v-if="x == 1 && player.research.upgrades.includes(x)">Active: <input type="checkbox" v-model="player.autos.treeUpgs"></div>
+                    </div>
+                </div>
+            </div><br><div class="table_center">
+                <div class="table_center" style="width: 900px;">
+                    <div v-for='x in FUNCTIONS.buyables.research.cols'>
+                        <button class="upgrade_button" v-on:click="FUNCTIONS.buyables.research.buy(x)"
+                        v-bind:class="{closed: !FUNCTIONS.buyables.research.can(x)}">
+                            {{ FUNCTIONS.buyables.research[x].desc }}<br>
+                            Cost: {{ format(FUNCTIONS.buyables.research[x].cost(), 0) }} RP<br>
+                            Level: {{ format(FUNCTIONS.buyables.research.have(x),0) }}
+                            <span v-if="FUNCTIONS.buyables.research[x].effDesc"><br>Currently: {{ FUNCTIONS.buyables.research[x].effDesc() }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
